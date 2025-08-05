@@ -6,6 +6,8 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.Test;
 
+import java.time.Duration;
+
 /*
 Exe TCs
 1. Setup
@@ -20,6 +22,21 @@ public class Topic_00_template {
     @BeforeClass
     public void initialBrowser(){
         driver = new FirefoxDriver();
+        driver.manage().timeouts().implicitlyWait(Duration.ofSeconds(15));
+        //kich thước browser
+        /**
+         * 1280x768
+         * 1366x768
+         * 1920x1080
+         * 2540x1440
+         * //
+         * HD
+         * FHD
+         * UHD
+         */
+
+        //driver.manage().window().setSize(new Dimension(1920, 768));
+        driver.manage().window().maximize();
         driver.get("https://demo.nopcommerce.com/");
     }
 
