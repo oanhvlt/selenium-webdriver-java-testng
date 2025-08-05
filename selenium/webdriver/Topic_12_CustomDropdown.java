@@ -1,9 +1,6 @@
 package webdriver;
 
-import org.openqa.selenium.By;
-import org.openqa.selenium.Keys;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
@@ -24,6 +21,7 @@ Exe TCs
 public class Topic_12_CustomDropdown {
     //1. Setup
     WebDriver driver;
+
     WebDriverWait explicitWait;
 
     @BeforeClass
@@ -103,8 +101,72 @@ public class Topic_12_CustomDropdown {
         Assert.assertEquals( driver.findElement(By.cssSelector("div.divider.text")).getText(), "Armenia");
     }
 
+    @Test
+    public void TC_05_mutipleDropdown() throws InterruptedException {
+        driver.get("https://multiple-select.wenzhixin.net.cn/templates/template.html?v=189&url=basic.html");
+
+
+    }
+    public void selectMultiItemInDropdown(String parentXpath, String childXpath, String[] expectedValueItem) throws InterruptedException {
+        JavascriptExecutor jsExecutor = (JavascriptExecutor)driver;
+        // 1: click vào cái dropdown cho nó xổ hết tất cả các giá trị ra
+        driver.findElement(By.xpath(parentXpath)).click();
+
+        // 2: chờ cho tất cả các giá trị trong dropdown được load ra thành công
+        explicitWait.until(ExpectedConditions.presenceOfAllElementsLocatedBy(By.xpath(childXpath)));
+
+        List<WebElement> allItems = driver.findElements(By.xpath(childXpath));
+
+        // Duyệt qa hết tất cả các phần tử cho đến khi thỏa mãn điều kiện
+        for (WebElement childElement : allItems) {
+            // "January", "April", "July"
+            for (String item : expectedValueItem) {
+                if (childElement.getText().equals(item)) {
+                    // 3: scroll đến item cần chọn (nếu như item cần chọn có thể nhìn thấy thì ko cần scroll)
+                    jsExecutor.executeScript("arguments[0].scrollIntoView(true);", childElement);
+                    Thread.sleep(1000);
+
+                    // 4: click vào item cần chọn
+                    childElement.click();
+                    Thread.sleep(1000);
+
+                    List<WebElement> itemSelected = driver.findElements(By.xpath("//li[@class='selected']//input"));
+                    System.out.println("Item selected = " + itemSelected.size());
+                    if (expectedValueItem.length == itemSelected.size()) {
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    public boolean isItemSelected(String[] months) {
+        List<WebElement> itemSelected = driver.findElements(By.xpath("//li[@class='selected']//input"));
+        int numberItemSelected = itemSelected.size();
+
+        String allItemSelectedText = driver.findElement(By.xpath("(//button[@class='ms-choice']/span)[1]")).getText();
+        System.out.println("Text da chon = " + allItemSelectedText);
+
+        if (numberItemSelected <= 3 && numberItemSelected > 0) {
+            boolean status = true;
+            for (String item : months) {
+                if (!allItemSelectedText.contains(item)) {
+                    status = false;
+                    return status;
+                }
+            }
+            return status;
+        } else if (numberItemSelected >= 12) {
+            return driver.findElement(By.xpath("//button[@class='ms-choice']/span[text()='All selected']")).isDisplayed();
+        } else if (numberItemSelected > 3 && numberItemSelected < 12) {
+            return driver.findElement(By.xpath("//button[@class='ms-choice']/span[text()='" + numberItemSelected + " of 12 selected']")).isDisplayed();
+        } else {
+            return false;
+        }
+    }
 
     private void selectItemInCustomDropdown(String parentElem, String childElem, String textItem) throws InterruptedException {
+        JavascriptExecutor jsExecutor = (JavascriptExecutor)driver;
         //Thao tác với dropdown
         //1. Chờ cho tới khi có thao tác clickable
         ////span[@id='speed-button']/span[contains(@class, 'ui-selectmenu-icon')]
@@ -120,6 +182,11 @@ public class Topic_12_CustomDropdown {
         for (WebElement item: allItems){
             System.out.println(item.getText());
             if(item.getText().equals(textItem)){
+                //trước khi click thì scroll đến elem
+                jsExecutor.executeScript("arguments[0].scrollIntoView(true);", item);
+                Thread.sleep(1000);
+                //đợi cho đến khi elem clickable
+                explicitWait.until(ExpectedConditions.elementToBeClickable(item));
                 //click item
                 item.click();
                 break;
@@ -151,6 +218,8 @@ public class Topic_12_CustomDropdown {
             }
         }
     }
+
+
 
     @AfterClass
     //3. Clean
